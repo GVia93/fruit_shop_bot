@@ -1,6 +1,6 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 
 from src.keyboards.cart import cart_keyboard
 from src.services.cart import (add_to_cart, clear_cart, get_cart,
@@ -24,17 +24,16 @@ async def handle_add_to_cart(callback: CallbackQuery, state: FSMContext):
     await callback.answer("Добавлено в корзину!")
 
 
-@router.callback_query(F.data == "cart:view")
-async def handle_view_cart(callback: CallbackQuery, state: FSMContext):
+@router.message(F.text == "🧺 Корзина")
+async def show_cart_message(message: Message, state: FSMContext):
     """
-    Показывает содержимое корзины.
-
-    Получает товары из FSMContext, считает итог и отправляет сообщение
-    со списком и общей суммой.
+    Обрабатывает нажатие кнопки 'Корзина'.
+    Показывает текущую корзину пользователя.
     """
     cart = await get_cart(state)
+
     if not cart:
-        await callback.message.answer("Корзина пуста 🧺")
+        await message.answer("Корзина пуста 🧺")
         return
 
     msg = "<b>🛒 Ваша корзина:</b>\n\n"
@@ -49,8 +48,7 @@ async def handle_view_cart(callback: CallbackQuery, state: FSMContext):
 
     msg += f"\n<b>Итого: {total}₽</b>"
 
-    await callback.message.answer(msg, reply_markup=cart_keyboard())
-    await callback.answer()
+    await message.answer(msg, reply_markup=cart_keyboard())
 
 
 @router.callback_query(F.data == "cart:clear")

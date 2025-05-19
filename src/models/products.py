@@ -1,9 +1,10 @@
-from typing import NamedTuple
+from dataclasses import dataclass
 
 
-class Product(NamedTuple):
+@dataclass
+class Product:
     """
-    Модель товара: id, название, цена, категория.
+    Модель товара.
     """
 
     id: int
@@ -11,15 +12,15 @@ class Product(NamedTuple):
     price: int  # в рублях
     category: str
 
+    def as_text(self) -> str:
+        """
+        Возвращает строку для вывода в Telegram.
+        """
+        return f"<b>{self.name}</b>\nЦена: {self.price}₽"
 
-# Мок-данные для тестирования каталога
-products = [
-    Product(1, "Яблоко", 50, "fruits"),
-    Product(2, "Банан", 60, "fruits"),
-    Product(3, "Морковь", 30, "vegetables"),
-    Product(4, "Огурец", 40, "vegetables"),
-    Product(5, "Клубника", 120, "berries"),
-    Product(6, "Черника", 150, "berries"),
-    Product(7, "Белый гриб", 200, "mushrooms"),
-    Product(8, "Шампиньоны", 100, "mushrooms"),
-]
+    def as_cart_line(self, qty: int) -> str:
+        """
+        Строка позиции в корзине.
+        """
+        total = self.price * qty
+        return f"{self.name} x{qty} = {total}₽"

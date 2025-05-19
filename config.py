@@ -16,6 +16,4 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Telegram ID администратора
-ADMIN_ID = int(
-    os.getenv("ADMIN_ID", "123456789")
-)  # обязательно заменить на реальный ID
+ADMIN_ID = int(os.getenv("ADMIN_ID", "123456789"))  # обязательно заменить на реальный ID

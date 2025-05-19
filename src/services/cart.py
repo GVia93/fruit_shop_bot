@@ -1,6 +1,7 @@
 from aiogram.fsm.context import FSMContext
 
-from src.models.products import Product, products
+from src.db.db_manager import DBManager
+from src.models.products import Product
 
 CART_KEY = "cart"
 
@@ -9,7 +10,9 @@ def get_product_by_id(product_id: int) -> Product | None:
     """
     Возвращает товар по его ID из списка products.
     """
-    return next((p for p in products if p.id == product_id), None)
+    db = DBManager()
+    product = db.get_product_by_id(product_id)
+    return product
 
 
 async def add_to_cart(state: FSMContext, product_id: int):

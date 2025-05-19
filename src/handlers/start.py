@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import Message
 
-from src.keyboards.categories import categories_keyboard
+from src.keyboards.main_menu import main_menu_keyboard
 
 router = Router()
 
@@ -11,9 +11,8 @@ async def start_handler(message: Message):
     """
     Обрабатывает команду /start.
 
-    Отправляет приветствие и меню категорий.
+    Показывает приветствие и главное меню с кнопками:
+    - Категории
+    - Корзина
     """
-    await message.answer(
-        "Добро пожаловать в наш магазин! 🍎\nВыберите категорию:",
-        reply_markup=categories_keyboard(),
-    )
+    await message.answer("Добро пожаловать в наш магазин! 🍎\nВыберите действие:", reply_markup=main_menu_keyboard())

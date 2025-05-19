@@ -35,9 +35,7 @@ def create_database_and_tables():
     conn.close()
 
     # Подключение к целевой БД
-    conn = psycopg2.connect(
-        dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT
-    )
+    conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
     cur = conn.cursor()
 
     # Создание таблиц
@@ -72,6 +70,17 @@ def create_database_and_tables():
             product_name TEXT NOT NULL,
             quantity INTEGER NOT NULL,
             price INTEGER NOT NULL
+        );
+    """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS products (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            price INTEGER NOT NULL,
+            category TEXT NOT NULL
         );
     """
     )
