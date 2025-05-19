@@ -3,7 +3,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from src.keyboards.cart import cart_keyboard
-from src.services.cart import add_to_cart, clear_cart, get_cart, get_product_by_id
+from src.services.cart import (add_to_cart, clear_cart, get_cart,
+                               get_product_by_id)
 
 router = Router()
 
