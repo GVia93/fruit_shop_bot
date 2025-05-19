@@ -1,10 +1,11 @@
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.client.default import DefaultBotProperties
 
 from config import BOT_TOKEN
-from src.handlers import start, catalog, cart
+from src.handlers import cart, catalog, start
+
 
 async def main():
     """
@@ -12,10 +13,7 @@ async def main():
 
     Создаёт Bot и Dispatcher, подключает роутеры, запускает polling.
     """
-    bot = Bot(
-        token=BOT_TOKEN,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-    )
+    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_routers(start.router, catalog.router, cart.router)
@@ -26,4 +24,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

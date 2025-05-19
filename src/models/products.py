@@ -1,14 +1,16 @@
-
 from typing import NamedTuple
+
 
 class Product(NamedTuple):
     """
     Модель товара: id, название, цена, категория.
     """
+
     id: int
     name: str
     price: int  # в рублях
     category: str
+
 
 # Мок-данные для тестирования каталога
 products = [

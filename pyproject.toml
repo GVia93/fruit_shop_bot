@@ -11,6 +11,9 @@ python = "^3.11"
 aiogram = "^3.4.1"
 python-dotenv = "^1.0.1"
 
+[tool.poetry.group.lint.dependencies]
+black = "^25.1.0"
+isort = "^6.0.1"
 
 [build-system]
 requires = ["poetry-core"]

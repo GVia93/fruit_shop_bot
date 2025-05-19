@@ -1,10 +1,12 @@
-from aiogram import Router, F
-from aiogram.types import CallbackQuery
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from src.services.cart import add_to_cart, get_cart, clear_cart, get_product_by_id
+from aiogram.types import CallbackQuery
+
 from src.keyboards.cart import cart_keyboard
+from src.services.cart import add_to_cart, clear_cart, get_cart, get_product_by_id
 
 router = Router()
+
 
 @router.callback_query(F.data.startswith("cart:add:"))
 async def handle_add_to_cart(callback: CallbackQuery, state: FSMContext):
@@ -60,4 +62,3 @@ async def handle_clear_cart(callback: CallbackQuery, state: FSMContext):
     await clear_cart(state)
     await callback.message.answer("Корзина очищена 🧹")
     await callback.answer()
-

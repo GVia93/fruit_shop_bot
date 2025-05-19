@@ -1,9 +1,11 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.types import CallbackQuery
+
 from src.keyboards.products import products_keyboard
 from src.models.products import products
 
 router = Router()
+
 
 @router.callback_query(F.data.startswith("category:"))
 async def show_products(callback: CallbackQuery):
@@ -22,7 +24,6 @@ async def show_products(callback: CallbackQuery):
     for product in filtered:
         await callback.message.answer(
             f"<b>{product.name}</b>\nЦена: {product.price}₽",
-            reply_markup=products_keyboard(product.id)
+            reply_markup=products_keyboard(product.id),
         )
     await callback.answer()
-

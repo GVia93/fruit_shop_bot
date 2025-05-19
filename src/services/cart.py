@@ -1,7 +1,9 @@
 from aiogram.fsm.context import FSMContext
+
 from src.models.products import Product, products
 
 CART_KEY = "cart"
+
 
 def get_product_by_id(product_id: int) -> Product | None:
     """
