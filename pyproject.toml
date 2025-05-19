@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "fruit-shop-bot"
+version = "0.1.0"
+description = ""
+authors = ["gvia <gritcaev.vv@gmail.com>"]
+readme = "README.md"
+packages = [{include = "fruit_shop_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiogram = "^3.4.1"
+python-dotenv = "^1.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
