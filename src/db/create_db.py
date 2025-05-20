@@ -89,3 +89,7 @@ def create_database_and_tables():
     cur.close()
     conn.close()
     print("Таблицы успешно созданы.")
+
+
+if __name__ == "__main__":
+    create_database_and_tables()
