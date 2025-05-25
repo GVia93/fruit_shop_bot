@@ -13,4 +13,4 @@ class OrderForm(StatesGroup):
 
     name = State()
     phone = State()
-    address = State()
+    # address = State()

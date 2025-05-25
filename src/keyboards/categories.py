@@ -9,6 +9,6 @@ def categories_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="🍎 Фрукты", callback_data="category:fruits")],
         [InlineKeyboardButton(text="🥦 Овощи", callback_data="category:vegetables")],
         [InlineKeyboardButton(text="🍓 Ягоды", callback_data="category:berries")],
-        [InlineKeyboardButton(text="🍄 Грибы", callback_data="category:mushrooms")],
+        [InlineKeyboardButton(text="🍄 Грибы/Зелень", callback_data="category:mushrooms")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
