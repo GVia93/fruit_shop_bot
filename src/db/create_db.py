@@ -85,6 +85,18 @@ def create_database_and_tables():
     """
     )
 
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS cart_items (
+            id SERIAL PRIMARY KEY,
+            user_telegram_id BIGINT NOT NULL,
+            product_id INT NOT NULL,
+            quantity NUMERIC(10, 2) NOT NULL DEFAULT 1,
+            UNIQUE (user_telegram_id, product_id)
+        );
+    """
+    )
+
     conn.commit()
     cur.close()
     conn.close()

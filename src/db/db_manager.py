@@ -32,6 +32,49 @@ class DBManager:
         self.conn.autocommit = True
         self.cur = self.conn.cursor()
 
+        from src.models.products import Product
+
+    def get_product_by_id(self, product_id: int) -> Product | None:
+        """
+        Получает товар по ID из базы данных.
+        """
+        self.cur.execute("SELECT id, name, price, category FROM products WHERE id = %s", (product_id,))
+        row = self.cur.fetchone()
+        if row:
+            return Product(*row)
+        return None
+
+    def add_to_cart(self, telegram_id: int, product_id: int, quantity: float):
+        """
+        Добавляет товар в корзину пользователя.
+        Если товар уже есть — увеличивает количество.
+        """
+        self.cur.execute("""
+            INSERT INTO cart_items (user_telegram_id, product_id, quantity)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (user_telegram_id, product_id)
+            DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity;
+        """, (telegram_id, product_id, quantity))
+
+    def get_cart(self, telegram_id: int) -> dict[int, float]:
+        """
+        Возвращает корзину пользователя в виде словаря:
+        product_id → количество.
+        """
+        self.cur.execute("""
+            SELECT product_id, quantity FROM cart_items
+            WHERE user_telegram_id = %s;
+        """, (telegram_id,))
+        return {row[0]: float(row[1]) for row in self.cur.fetchall()}
+
+    def clear_cart(self, telegram_id: int):
+        """
+        Очищает корзину пользователя (удаляет все товары).
+        """
+        self.cur.execute("""
+            DELETE FROM cart_items WHERE user_telegram_id = %s;
+        """, (telegram_id,))
+
     def get_user(self, telegram_id: int) -> dict | None:
         """
         Получает пользователя по Telegram ID.

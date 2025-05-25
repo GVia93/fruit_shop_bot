@@ -26,8 +26,7 @@ async def start_order(callback: CallbackQuery, state: FSMContext):
     """
     telegram_id = callback.from_user.id
     user = db.get_user(telegram_id)
-    cart = await get_cart(state)
-    cart_text, total = await get_cart_preview_text(cart)
+    cart_text, total = await get_cart_preview_text(telegram_id)
 
     if user:
         # Сохраняем данные в FSMContext
@@ -60,6 +59,7 @@ async def confirm_order(callback: CallbackQuery, state: FSMContext):
     """
     Подтверждение заказа — запускает сохранение в БД.
     """
+    telegram_id = callback.from_user.id
     data = await state.get_data()
     if not data.get("user_id"):
         user_id = db.create_or_update_user(
@@ -69,7 +69,7 @@ async def confirm_order(callback: CallbackQuery, state: FSMContext):
             address=""
         )
         data["user_id"] = user_id
-    await process_order(callback.message, state, data)
+    await process_order(callback.message, state, data, telegram_id)
     await callback.answer()
 
 
@@ -99,10 +99,10 @@ async def get_phone(message: Message, state: FSMContext):
     """
     Получает телефон пользователя и переходит к следующему шагу — адресу.
     """
+    telegram_id = message.from_user.id
     await state.update_data(phone=message.text)
     data = await state.get_data()
-    cart = await get_cart(state)
-    cart_text, total = await get_cart_preview_text(cart)
+    cart_text, total = await get_cart_preview_text(telegram_id)
 
     await message.answer(
         f"👤 {data['name']}\n"
@@ -140,15 +140,16 @@ async def get_phone(message: Message, state: FSMContext):
 #     )
 
 
-async def process_order(message_or_callback, state: FSMContext, data: dict):
+async def process_order(message_or_callback, state: FSMContext, data: dict, telegram_id: int):
     """
     Обрабатывает заказ:
-    - Получает корзину из состояния
-    - Создаёт заказ в БД
-    - Отправляет администратору уведомление
-    - Очищает FSM и корзину
+    - Получает корзину из БД
+    - Создаёт заказ
+    - Уведомляет администратора
+    - Очищает корзину
     """
-    cart = await get_cart(state)
+    cart = db.get_cart(telegram_id)
+
     if not cart:
         await message_or_callback.answer("Корзина пуста 🧺")
         return
@@ -164,28 +165,30 @@ async def process_order(message_or_callback, state: FSMContext, data: dict):
         total += subtotal
         items.append({"product_name": product.name, "quantity": qty, "price": product.price})
 
-    # Убедимся, что user_id есть
     user_id = data.get("user_id")
     if not user_id:
         await message_or_callback.answer("Ошибка: пользователь не найден.")
         return
 
-    # Создание заказа
     order_id = db.create_order(user_id, items)
 
-    # Уведомление администратору
-    item_lines = "\n".join(f"{i['product_name']} x{i['quantity']} = {i['quantity'] * i['price']}₽" for i in items)
+    item_lines = "\n".join(
+        f"{i['product_name']} x{i['quantity']} = {i['quantity'] * i['price']}₽"
+        for i in items
+    )
+
     text = (
         f"📦 <b>Новый заказ #{order_id}</b>\n\n"
-        f"👤 {data.get('name', 'из базы')}\n"
-        f"📱 {data.get('phone', '-')}\n"
-        # f"📍 {data.get('address', '-')}\n\n"
+        f"👤 {data.get('name')}\n"
+        f"📱 {data.get('phone')}\n\n"
         f"{item_lines}\n\n"
-        f"💰 <b>Итого: {total}₽</b>"
+        f"💰 <b>Итого: {round(total, 2)}₽</b>"
     )
 
     for admin_id in ADMIN_IDS:
         await message_or_callback.bot.send_message(admin_id, text)
+
     await message_or_callback.answer("✅ Ваш заказ успешно оформлен!")
-    await clear_cart(state)
+
+    db.clear_cart(telegram_id)
     await state.clear()

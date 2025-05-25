@@ -15,28 +15,31 @@ def get_product_by_id(product_id: int) -> Product | None:
     return product
 
 
-async def add_to_cart(state: FSMContext, product_id: int):
+async def add_to_cart(state: FSMContext, product_id: int, quantity: float = 1.0):
     """
     Добавляет товар в корзину (FSMContext).
-    Увеличивает количество, если товар уже есть.
+
+    Если товар уже есть — увеличивает количество на `quantity`,
+    иначе добавляет новый товар с заданным количеством.
     """
-    cart = await state.get_data()
-    cart_items = cart.get(CART_KEY, {})
+    data = await state.get_data()
+    cart: dict[int, float] = data.get(CART_KEY, {})
+    cart = dict(cart)  # создаём копию
 
-    if product_id in cart_items:
-        cart_items[product_id] += 1
-    else:
-        cart_items[product_id] = 1
+    cart[product_id] = cart.get(product_id, 0) + quantity
 
-    await state.update_data({CART_KEY: cart_items})
+    await state.update_data({CART_KEY: cart})
+
+    # отладка
+    print("DEBUG cart updated:", cart)
 
 
-async def get_cart(state: FSMContext) -> dict[int, int]:
+async def get_cart(state: FSMContext) -> dict[int, float]:
     """
     Возвращает текущую корзину из FSMContext.
     """
-    cart = await state.get_data()
-    return cart.get(CART_KEY, {})
+    data = await state.get_data()
+    return data.get(CART_KEY, {})
 
 
 async def clear_cart(state: FSMContext):
