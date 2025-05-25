@@ -44,7 +44,7 @@ poetry install
 
 ```env
 BOT_TOKEN=your_telegram_bot_token
-ADMIN_ID=123456789
+ADMIN_IDS=123456789,123456789
 
 DB_HOST=localhost
 DB_PORT=5432
