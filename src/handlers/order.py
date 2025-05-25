@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from config import ADMIN_ID
+from config import ADMIN_IDS
 from src.db.db_manager import DBManager
 from src.keyboards.order import confirm_order_keyboard
 from src.services.cart import clear_cart, get_cart
@@ -41,7 +41,8 @@ async def start_order(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer(
             f"✅ Используем ваши сохранённые данные:\n\n"
             f"👤 {user['name']}\n"
-            f"📱 {user['phone']}\n"     # f"📍 {user['address']}\n\n"
+            f"📱 {user['phone']}\n"
+            # f"📍 {user['address']}\n\n"
             f"<b>🛒 Ваша корзина:</b>\n{cart_text}\n\n"
             f"<b>💰 Итого: {total}₽</b>\n\n"
             "Проверьте заказ перед отправкой:",
@@ -100,10 +101,14 @@ async def get_phone(message: Message, state: FSMContext):
     """
     await state.update_data(phone=message.text)
     data = await state.get_data()
+    cart = await get_cart(state)
+    cart_text, total = await get_cart_preview_text(cart)
 
     await message.answer(
         f"👤 {data['name']}\n"
         f"📱 {data['phone']}\n\n"
+        f"<b>🛒 Ваша корзина:</b>\n{cart_text}\n\n"
+        f"<b>💰 Итого: {total}₽</b>\n\n"
         "Проверьте заказ перед отправкой:",
         reply_markup=confirm_order_keyboard()
     )
@@ -179,7 +184,8 @@ async def process_order(message_or_callback, state: FSMContext, data: dict):
         f"💰 <b>Итого: {total}₽</b>"
     )
 
-    await message_or_callback.bot.send_message(ADMIN_ID, text)
+    for admin_id in ADMIN_IDS:
+        await message_or_callback.bot.send_message(admin_id, text)
     await message_or_callback.answer("✅ Ваш заказ успешно оформлен!")
     await clear_cart(state)
     await state.clear()

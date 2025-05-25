@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from config import ADMIN_ID
+from config import ADMIN_IDS
 from src.db.db_manager import DBManager
 from src.keyboards.admin_panel import (admin_menu_keyboard,
                                        admin_order_actions_keyboard,
@@ -20,7 +20,7 @@ async def admin_menu(message: Message):
     """
     Показывает админ-панель с кнопками: Заказы, Статистика.
     """
-    if message.from_user.id != ADMIN_ID:
+    if message.from_user.id not in ADMIN_IDS:
         await message.answer("У вас нет доступа.")
         return
 
