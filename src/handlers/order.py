@@ -5,7 +5,6 @@ from aiogram.types import CallbackQuery, Message
 from config import ADMIN_IDS
 from src.db.db_manager import DBManager
 from src.keyboards.order import confirm_order_keyboard
-from src.services.cart import clear_cart, get_cart
 from src.states.order import OrderForm
 from src.utils.cart_preview import get_cart_preview_text
 from src.utils.state import clear_order_form
@@ -41,7 +40,6 @@ async def start_order(callback: CallbackQuery, state: FSMContext):
             f"✅ Используем ваши сохранённые данные:\n\n"
             f"👤 {user['name']}\n"
             f"📱 {user['phone']}\n"
-            # f"📍 {user['address']}\n\n"
             f"<b>🛒 Ваша корзина:</b>\n{cart_text}\n\n"
             f"<b>💰 Итого: {total}₽</b>\n\n"
             "Проверьте заказ перед отправкой:",

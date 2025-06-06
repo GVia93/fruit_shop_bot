@@ -17,7 +17,11 @@ class Product:
         """
         Возвращает строку для вывода в Telegram.
         """
-        return f"<b>{self.name}</b>\nЦена: {self.price}₽ / {self.unit}"
+        x = ('шт', 'кг')
+        if self.unit == 'kg':
+            return f"<b>{self.name}</b>\nЦена: {self.price}₽ / {x[1]}"
+        else:
+            return f"<b>{self.name}</b>\nЦена: {self.price}₽ / {x[0]}"
 
     def as_cart_line(self, qty: float) -> str:
         """
