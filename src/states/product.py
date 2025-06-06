@@ -14,6 +14,7 @@ class AddProduct(StatesGroup):
     name = State()
     price = State()
     category = State()
+    unit = State()
 
 
 class DeleteProduct(StatesGroup):

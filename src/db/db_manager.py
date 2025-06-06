@@ -32,16 +32,24 @@ class DBManager:
         self.conn.autocommit = True
         self.cur = self.conn.cursor()
 
-        from src.models.products import Product
-
     def get_product_by_id(self, product_id: int) -> Product | None:
         """
         Получает товар по ID из базы данных.
         """
-        self.cur.execute("SELECT id, name, price, category FROM products WHERE id = %s", (product_id,))
+        self.cur.execute("""
+                SELECT id, name, price, category, unit
+                FROM products
+                WHERE id = %s
+            """, (product_id,))
         row = self.cur.fetchone()
         if row:
-            return Product(*row)
+            return Product(
+                id=row[0],
+                name=row[1],
+                price=row[2],
+                category=row[3],
+                unit=row[4]
+            )
         return None
 
     def add_to_cart(self, telegram_id: int, product_id: int, quantity: float):
@@ -111,36 +119,22 @@ class DBManager:
         )
         return self.cur.fetchone()[0]
 
-    def create_order(self, user_id: int, items: list[dict], status: str = "new") -> int:
+    def create_order(self, user_id: int, items: list[dict]) -> int:
         """
-        Создаёт заказ и сохраняет его позиции в таблице order_items.
-
-        Аргументы:
-            user_id (int): ID пользователя
-            items (list[dict]): список товаров (product_name, quantity, price)
-            status (str): статус заказа (по умолчанию "new")
-
-        Возвращает:
-            int — ID созданного заказа
+        Создаёт заказ и связанные позиции заказа.
         """
-        self.cur.execute(
-            """
+        self.cur.execute("""
             INSERT INTO orders (user_id, status, created_at)
             VALUES (%s, %s, %s)
             RETURNING id;
-            """,
-            (user_id, status, datetime.now()),
-        )
+        """, (user_id, "new", datetime.now()))
         order_id = self.cur.fetchone()[0]
 
         for item in items:
-            self.cur.execute(
-                """
+            self.cur.execute("""
                 INSERT INTO order_items (order_id, product_name, quantity, price)
                 VALUES (%s, %s, %s, %s);
-                """,
-                (order_id, item["product_name"], item["quantity"], item["price"]),
-            )
+            """, (order_id, item["product_name"], item["quantity"], item["price"]))
 
         return order_id
 
@@ -226,20 +220,16 @@ class DBManager:
 
         return {"total": total, "delivered": delivered, "canceled": canceled, "revenue": revenue}
 
-    def get_product_by_id(self, product_id: int) -> Product | None:
-        """
-        Возвращает товар по ID из базы данных.
-        """
-        self.cur.execute("SELECT id, name, price, category FROM products WHERE id = %s", (product_id,))
-        row = self.cur.fetchone()
-        return Product(*row) if row else None
-
     def get_products_by_category(self, category: str) -> list[Product]:
         """
         Возвращает список товаров из указанной категории.
         """
-        self.cur.execute("SELECT id, name, price, category FROM products WHERE category = %s", (category,))
-        return [Product(*row) for row in self.cur.fetchall()]
+        self.cur.execute("""
+            SELECT id, name, price, category, unit FROM products
+            WHERE category = %s;
+        """, (category,))
+        rows = self.cur.fetchall()
+        return [Product(id=row[0], name=row[1], price=row[2], category=row[3], unit=row[4]) for row in rows]
 
     def add_product(self, product: Product) -> int:
         """
@@ -247,11 +237,11 @@ class DBManager:
         """
         self.cur.execute(
             """
-            INSERT INTO products (name, price, category)
-            VALUES (%s, %s, %s)
+            INSERT INTO products (name, price, category, unit)
+            VALUES (%s, %s, %s, %s)
             RETURNING id;
             """,
-            (product.name, product.price, product.category),
+            (product.name, product.price, product.category, product.unit),
         )
         return self.cur.fetchone()[0]
 
@@ -259,8 +249,9 @@ class DBManager:
         """
         Возвращает список всех товаров из базы.
         """
-        self.cur.execute("SELECT id, name, price, category FROM products ORDER BY id;")
-        return [Product(*row) for row in self.cur.fetchall()]
+        self.cur.execute("SELECT id, name, price, category, unit FROM products")
+        rows = self.cur.fetchall()
+        return [Product(id=row[0], name=row[1], price=row[2], category=row[3], unit=row[4]) for row in rows]
 
     def delete_product_by_id(self, product_id: int) -> bool:
         """

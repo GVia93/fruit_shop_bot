@@ -13,12 +13,20 @@ db = DBManager()
 @router.callback_query(F.data.startswith("cart:add:"))
 async def handle_add_to_cart(callback: CallbackQuery, state: FSMContext):
     """
-    Запрашивает у пользователя количество (в кг) при добавлении в корзину.
+    Запрашивает количество товара в заданной единице измерения.
     """
     product_id = int(callback.data.split(":")[2])
+    product = db.get_product_by_id(product_id)
+
+    if not product:
+        await callback.message.answer("Товар не найден.")
+        await callback.answer()
+        return
+
     await state.update_data(product_id=product_id)
     await state.set_state(CartAdd.quantity)
-    await callback.message.answer("Укажите количество (в кг):")
+
+    await callback.message.answer(f"Укажите количество (в {product.unit}):")
     await callback.answer()
 
 
@@ -32,7 +40,7 @@ async def handle_quantity_input(message: Message, state: FSMContext):
         if qty <= 0:
             raise ValueError
     except ValueError:
-        await message.answer("Введите корректное число (например: 1.5)")
+        await message.answer("Введите корректное положительное число.")
         return
 
     data = await state.get_data()
@@ -47,7 +55,8 @@ async def handle_quantity_input(message: Message, state: FSMContext):
 @router.message(F.text == "🧺 Корзина")
 async def show_cart_message(message: Message, state: FSMContext):
     """
-    Показывает содержимое корзины пользователя (из БД).
+    Показывает содержимое корзины пользователя (из БД),
+    включая единицу измерения товара.
     """
     telegram_id = message.from_user.id
     cart = db.get_cart(telegram_id)
@@ -64,9 +73,9 @@ async def show_cart_message(message: Message, state: FSMContext):
         if product:
             subtotal = round(product.price * qty, 2)
             total += subtotal
-            msg += f"{product.name} x {round(qty, 2)} кг = {subtotal}₽\n"
+            msg += f"{product.name} x {round(qty, 2)} {product.unit} = {subtotal}₽\n"
 
-    msg += f"\n<b>Итого: {round(total, 2)}₽</b>"
+    msg += f"\n<b>💰 Итого: {round(total, 2)}₽</b>"
 
     await message.answer(msg, reply_markup=cart_keyboard())
 

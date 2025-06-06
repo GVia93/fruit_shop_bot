@@ -112,32 +112,6 @@ async def get_phone(message: Message, state: FSMContext):
         "Проверьте заказ перед отправкой:",
         reply_markup=confirm_order_keyboard()
     )
-    # await message.answer("Введите адрес доставки:")
-    # await state.set_state(OrderForm.address)
-
-
-# @router.message(OrderForm.address)
-# async def get_address(message: Message, state: FSMContext):
-#     """
-#     Получает адрес, сохраняет пользователя в БД и завершает оформление заказа.
-#     """
-#     await state.update_data(address=message.text)
-#     data = await state.get_data()
-#
-#     user_id = db.create_or_update_user(
-#         telegram_id=message.from_user.id, name=data["name"], phone=data["phone"], address=data["address"]
-#     )
-#
-#     data["user_id"] = user_id
-#
-#     await message.answer(
-#         f"✅ Данные обновлены:\n\n"
-#         f"👤 {data['name']}\n"
-#         f"📱 {data['phone']}\n"
-#         f"📍 {data['address']}\n\n"
-#         f"Проверьте заказ перед отправкой:",
-#         reply_markup=confirm_order_keyboard(),
-#     )
 
 
 async def process_order(message_or_callback, state: FSMContext, data: dict, telegram_id: int):
@@ -161,9 +135,15 @@ async def process_order(message_or_callback, state: FSMContext, data: dict, tele
         product = db.get_product_by_id(pid)
         if not product:
             continue
+
         subtotal = product.price * qty
         total += subtotal
-        items.append({"product_name": product.name, "quantity": qty, "price": product.price})
+        items.append({
+            "product_name": product.name,
+            "quantity": qty,
+            "price": product.price,
+            "unit": product.unit
+        })
 
     user_id = data.get("user_id")
     if not user_id:
@@ -173,7 +153,7 @@ async def process_order(message_or_callback, state: FSMContext, data: dict, tele
     order_id = db.create_order(user_id, items)
 
     item_lines = "\n".join(
-        f"{i['product_name']} x{i['quantity']} = {i['quantity'] * i['price']}₽"
+        f"{i['product_name']} x{round(i['quantity'], 2)} {i['unit']} = {round(i['quantity'] * i['price'], 2)}₽"
         for i in items
     )
 

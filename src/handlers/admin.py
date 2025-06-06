@@ -143,22 +143,41 @@ async def get_product_price(message: Message, state: FSMContext):
 @router.message(AddProduct.category)
 async def get_product_category(message: Message, state: FSMContext):
     """
-    Сохраняет категорию, формирует объект Product,
-    добавляет его в базу данных и завершает FSM.
+    Сохраняет категорию товара и запрашивает единицу измерения.
     """
     CATEGORY_MAP = {"фрукты": "fruits", "овощи": "vegetables", "ягоды": "berries", "грибы": "mushrooms"}
-
     user_input = message.text.strip().lower()
     category = CATEGORY_MAP.get(user_input)
 
     if not category:
-        await message.answer("Неверная категория. Пожалуйста, выберите из: фрукты, овощи, ягоды, грибы.")
+        await message.answer("Неверная категория. Выберите из: фрукты, овощи, ягоды, грибы.")
         return
 
     await state.update_data(category=category)
+    await message.answer("Укажите единицу измерения:\n<b>kg</b> — килограммы\n<b>pcs</b> — штуки")
+    await state.set_state(AddProduct.unit)
+
+
+@router.message(AddProduct.unit)
+async def get_product_unit(message: Message, state: FSMContext):
+    """
+    Сохраняет единицу измерения, создаёт продукт и завершает FSM.
+    """
+    unit = message.text.strip().lower()
+    if unit not in ("kg", "pcs"):
+        await message.answer("Неверная единица. Введите 'kg' или 'pcs'.")
+        return
+
+    await state.update_data(unit=unit)
     data = await state.get_data()
 
-    product = Product(id=0, name=data["name"], price=data["price"], category=data["category"])
+    product = Product(
+        id=0,
+        name=data["name"],
+        price=data["price"],
+        category=data["category"],
+        unit=data["unit"]
+    )
 
     db.add_product(product)
     await message.answer(f"✅ Товар <b>{product.name}</b> добавлен в базу данных.")

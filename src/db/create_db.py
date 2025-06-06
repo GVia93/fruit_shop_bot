@@ -39,63 +39,53 @@ def create_database_and_tables():
     cur = conn.cursor()
 
     # Создание таблиц
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            telegram_id BIGINT UNIQUE NOT NULL,
-            name TEXT NOT NULL,
-            phone TEXT NOT NULL,
-            address TEXT NOT NULL
-        );
-    """
-    )
+    cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                telegram_id BIGINT UNIQUE NOT NULL,
+                name TEXT,
+                phone TEXT,
+                address TEXT
+            );
+        """)
 
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS orders (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id),
-            status TEXT NOT NULL DEFAULT 'new',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """
-    )
+    cur.execute("""
+            CREATE TABLE IF NOT EXISTS products (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                price INTEGER NOT NULL,
+                category TEXT NOT NULL,
+                unit TEXT NOT NULL DEFAULT 'kg'
+            );
+        """)
 
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS order_items (
-            id SERIAL PRIMARY KEY,
-            order_id INTEGER REFERENCES orders(id),
-            product_name TEXT NOT NULL,
-            quantity INTEGER NOT NULL,
-            price INTEGER NOT NULL
-        );
-    """
-    )
+    cur.execute("""
+            CREATE TABLE IF NOT EXISTS cart_items (
+                user_telegram_id BIGINT NOT NULL,
+                product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                quantity NUMERIC NOT NULL,
+                PRIMARY KEY (user_telegram_id, product_id)
+            );
+        """)
 
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS products (
-            id SERIAL PRIMARY KEY,
-            name TEXT NOT NULL,
-            price INTEGER NOT NULL,
-            category TEXT NOT NULL
-        );
-    """
-    )
+    cur.execute("""
+            CREATE TABLE IF NOT EXISTS orders (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                status TEXT NOT NULL DEFAULT 'new',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
 
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS cart_items (
-            id SERIAL PRIMARY KEY,
-            user_telegram_id BIGINT NOT NULL,
-            product_id INT NOT NULL,
-            quantity NUMERIC(10, 2) NOT NULL DEFAULT 1,
-            UNIQUE (user_telegram_id, product_id)
-        );
-    """
-    )
+    cur.execute("""
+            CREATE TABLE IF NOT EXISTS order_items (
+                id SERIAL PRIMARY KEY,
+                order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+                product_name TEXT NOT NULL,
+                quantity NUMERIC NOT NULL,
+                price INTEGER NOT NULL
+            );
+        """)
 
     conn.commit()
     cur.close()
